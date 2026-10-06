@@ -36,9 +36,8 @@ test = [
 # 3. DEVELOPERS
 # For contributors writing code. Includes linters, formatters, and testing tools.
 dev = [
-    "black",         # Code formatting
-    "flake8",        # Linting
-    "isort",         # Import sorting
+    "ruff",          # Fast linting and formatting
+    "mypy",          # Static type checking
     "custom-drone-env[test]" # Automatically includes the 'test' profile above
 ]
 
@@ -47,7 +46,7 @@ dev = [
 ai = [
     "torch>=2.0.0",
     "torchvision",
-    "lerobot"        # Hugging Face's robotics library
+    "lerobot"
 ]
 
 # 5. ALL (The "Give me everything" command)
