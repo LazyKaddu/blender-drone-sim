@@ -55,7 +55,7 @@ class CustomDroneEnv(BaseAviary):
                 "r": float(kin[7]), "p": float(kin[8]), "y_rot": float(kin[9])
             }
             self.ipc.update_state(state)
-            
+        print("State: ", state)
         return obs, reward, terminated, truncated, info
 
     # Mandatory Gym/Aviary Overrides (To be implemented by specific tasks)

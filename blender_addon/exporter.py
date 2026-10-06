@@ -52,8 +52,9 @@ def export_scene_to_urdf(filepath):
                 ET.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
                 ET.SubElement(inertial, "inertia", ixx="1.0", ixy="0", ixz="0", iyy="1.0", iyz="0", izz="1.0")
             
-            # Select only this object to export it
-            bpy.ops.object.select_all(action='DESELECT')
+            # Select only this object to export it (using context-safe method)
+            for o in bpy.context.view_layer.objects:
+                o.select_set(False)
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
             
@@ -104,8 +105,9 @@ def export_scene_to_urdf(filepath):
                 # we must place the joint exactly at the origin to prevent double-transforms.
                 ET.SubElement(joint, "origin", xyz="0 0 0", rpy="0 0 0")
             
-    # Restore original selection state
-    bpy.ops.object.select_all(action='DESELECT')
+    # Restore original selection state (using context-safe method)
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
     for obj in selected_objects:
         obj.select_set(True)
     if active_obj:
