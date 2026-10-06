@@ -56,4 +56,15 @@ class CustomDroneEnv(BaseAviary):
             
         return obs, reward, terminated, truncated, info
 
-    # (Keep your _computeReward, _computeTerminated, etc., as they were)
+    # Mandatory Gym/Aviary Overrides (To be implemented by specific tasks)
+    def _computeReward(self):
+        raise NotImplementedError("Child classes must implement this to define custom reward functions.")
+
+    def _computeTerminated(self):
+        raise NotImplementedError("Child classes must implement this to define custom termination conditions.")
+
+    def _computeTruncated(self):
+        raise NotImplementedError("Child classes must implement this to define custom truncation conditions.")
+
+    def _computeInfo(self):
+        raise NotImplementedError("Child classes must implement this to define custom info dictionaries.")
