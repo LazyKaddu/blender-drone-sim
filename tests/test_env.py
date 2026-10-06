@@ -1,9 +1,23 @@
 import numpy as np
 import pytest
+from gymnasium import spaces
 from custom_drone_env.env import CustomDroneEnv
 
 class DummyDroneEnv(CustomDroneEnv):
     """A concrete implementation of our abstract environment for testing."""
+    def _actionSpace(self):
+        return spaces.Dict({"0": spaces.Box(low=-1, high=1, shape=(4,))})
+
+    def _observationSpace(self):
+        return spaces.Dict({"0": spaces.Box(low=-1, high=1, shape=(12,))})
+
+    def _computeObs(self):
+        return {"0": np.zeros(12, dtype=np.float32)}
+
+    def _preprocessAction(self, action):
+        # BaseAviary expects the processed action (RPMs) to be a flat array of shape (NUM_DRONES, 4)
+        return np.zeros((1, 4), dtype=np.float32)
+
     def _computeReward(self):
         return 1.0
 
@@ -31,8 +45,7 @@ def test_environment_initialization():
     
     assert reward == 1.0
     assert terminated is False
-    # BaseAviary nests infos by drone ID, so info["0"] holds our drone's info
-    assert info["0"]["test"] is True 
+    assert info["test"] is True 
     
     env.close()
 
@@ -47,9 +60,11 @@ def test_environment_telemetry_push():
     
     # Check that the IPC object properly parsed and stored the state
     assert env.ipc.drone_state is not None
-    assert "x" in env.ipc.drone_state
-    assert "y" in env.ipc.drone_state
-    assert "z" in env.ipc.drone_state
-    assert "y_rot" in env.ipc.drone_state
+    assert "location" in env.ipc.drone_state
+    assert "rotation" in env.ipc.drone_state
+    assert "scale" in env.ipc.drone_state
+    
+    # Check that location has 3 elements (x, y, z)
+    assert len(env.ipc.drone_state["location"]) == 3
     
     env.close()

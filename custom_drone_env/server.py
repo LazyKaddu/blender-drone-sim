@@ -41,7 +41,13 @@ class TelemetryWSServer:
 
     def update_state(self, new_state: dict):
         """The environment calls this every step to update the telemetry."""
-        self.drone_state = new_state
+        # Format the data cleanly for Blender's coordinate system
+        self.drone_state = {
+            "type": "telemetry",
+            "location": [new_state.get("x", 0.0), new_state.get("y", 0.0), new_state.get("z", 0.0)],
+            "rotation": [new_state.get("r", 0.0), new_state.get("p", 0.0), new_state.get("y_rot", 0.0)],
+            "scale": [1.0, 1.0, 1.0]
+        }
 
     def broadcast_data(self, data: dict):
         """Immediately broadcast custom data to all connected clients."""
@@ -66,11 +72,12 @@ class TelemetryWSServer:
             finally:
                 self.clients.remove(websocket)
 
-        self.ws_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.ws_loop)
-        start_server = websockets.serve(telemetry_handler, self.ws_host, self.ws_port)
-        self.ws_loop.run_until_complete(start_server)
-        self.ws_loop.run_forever()
+        async def _main():
+            self.ws_loop = asyncio.get_running_loop()
+            async with websockets.serve(telemetry_handler, self.ws_host, self.ws_port):
+                await asyncio.Future() # Run forever
+
+        asyncio.run(_main())
 
 
 class SimulationIPC(HotReloadHTTPServer, TelemetryWSServer):
@@ -78,10 +85,10 @@ class SimulationIPC(HotReloadHTTPServer, TelemetryWSServer):
     Combined IPC interface used by the PyBullet Environment.
     Inherits from both HTTP (hot-reload) and WebSocket (telemetry) servers.
     """
-    def __init__(self, reload_callback):
+    def __init__(self, reload_callback, http_port=5000, ws_port=8765):
         # Initialize both parent classes explicitly
-        HotReloadHTTPServer.__init__(self, reload_callback=reload_callback)
-        TelemetryWSServer.__init__(self)
+        HotReloadHTTPServer.__init__(self, reload_callback=reload_callback, port=http_port)
+        TelemetryWSServer.__init__(self, port=ws_port)
         
         # Start background threads immediately upon initialization
         threading.Thread(target=self._start_http, daemon=True).start()

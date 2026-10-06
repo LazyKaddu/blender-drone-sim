@@ -12,14 +12,14 @@ def test_http_hot_reload_callback():
         called = True
         
     # Initialize the server (this spins up daemon threads for HTTP and WS)
-    ipc = SimulationIPC(reload_callback=mock_callback)
+    ipc = SimulationIPC(reload_callback=mock_callback, http_port=5001, ws_port=8766)
     
     # Give the background threads a tiny bit of time to bind to ports
     time.sleep(0.5)
     
     try:
         # Send a GET request to the hot-reload endpoint
-        response = urllib.request.urlopen("http://localhost:5000/reload")
+        response = urllib.request.urlopen("http://localhost:5001/reload")
         
         assert response.status == 200
         assert response.read().decode('utf-8') == "Reloading world"
