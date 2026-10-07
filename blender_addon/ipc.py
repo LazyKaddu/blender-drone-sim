@@ -12,6 +12,7 @@ _running = False
 
 def ping_reload():
     """Sends a GET request to the PyBullet environment to trigger a hot-reload."""
+    print("[DEBUG Blender Addon] ping_reload() called. Sending GET request to http://localhost:5000/reload")
     try:
         urllib.request.urlopen("http://localhost:5000/reload", timeout=1.0)
     except Exception as e:
@@ -22,6 +23,7 @@ def is_connected():
 
 def start_telemetry_listener():
     """Spins up a background thread to listen to WebSocket telemetry."""
+    print("[DEBUG Blender Addon] start_telemetry_listener() called.")
     global _ws_thread, _running
     if _running:
         return
@@ -31,6 +33,7 @@ def start_telemetry_listener():
 
 def stop_telemetry_listener():
     """Safely kills the WebSocket thread."""
+    print("[DEBUG Blender Addon] stop_telemetry_listener() called.")
     global _running, _loop
     _running = False
     if _loop is not None:
@@ -51,6 +54,7 @@ async def _listen_ws():
     uri = "ws://localhost:8765"
     while _running:
         try:
+            print(f"[DEBUG Blender Addon] Attempting to connect to {uri}...")
             async with websockets.connect(uri) as ws:
                 print("[Drone Sim IPC] Connected to Telemetry Server!")
                 while _running:

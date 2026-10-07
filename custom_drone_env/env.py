@@ -9,6 +9,7 @@ from custom_drone_env.server import SimulationIPC
 
 class CustomDroneEnv(BaseAviary):
     def __init__(self, urdf_path="C:/path/to/export/world.urdf", enable_ipc=True, **kwargs):
+        print(f"[DEBUG CustomDroneEnv] __init__ called with urdf_path={urdf_path}, enable_ipc={enable_ipc}")
         self.urdf_path = urdf_path
         self.world_id = None
         self.enable_ipc = enable_ipc
@@ -23,6 +24,7 @@ class CustomDroneEnv(BaseAviary):
 
     def _addObstacles(self):
         """Called automatically during env.reset(). Loads the Blender world."""
+        print("[DEBUG CustomDroneEnv] _addObstacles() called")
         super()._addObstacles() 
         self._load_blender_urdf()
 
