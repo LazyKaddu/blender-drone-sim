@@ -72,6 +72,7 @@ def process_telemetry_queue():
         data = _telemetry_queue.popleft()
         
     if data and data.get("type") == "telemetry":
+        print('[WS] termetary recieved ' + str(data))
         loc = data.get("location", [0, 0, 0])
         rot = data.get("rotation", [0, 0, 0])
         
