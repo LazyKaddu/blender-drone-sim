@@ -3,6 +3,15 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 import os
 
+def _is_part_of_drone(obj):
+    """Recursively checks if the object or any of its parents has 'drone' in its name."""
+    curr = obj
+    while curr:
+        if "drone" in curr.name.lower():
+            return True
+        curr = curr.parent
+    return False
+
 def export_scene_to_urdf(filepath):
     """
     Parses the current Blender scene, generates a valid URDF XML string 
@@ -26,8 +35,8 @@ def export_scene_to_urdf(filepath):
     selected_objects = bpy.context.selected_objects.copy()
     
     for obj in bpy.context.scene.objects:
-        # We only export meshes, and we ignore the Drone itself!
-        if obj.type == 'MESH' and "drone" not in obj.name.lower():
+        # We only export meshes, and we ignore the Drone and all its children!
+        if obj.type == 'MESH' and not _is_part_of_drone(obj):
             
             link_name = f"link_{obj.name.replace('.', '_')}"
             link = ET.SubElement(robot, "link", name=link_name)
