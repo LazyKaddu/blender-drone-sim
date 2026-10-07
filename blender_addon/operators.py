@@ -40,6 +40,16 @@ class DRONE_OT_connect(bpy.types.Operator):
     
     def execute(self, context):
         print("[DEBUG Blender Addon] Connecting Telemetry...")
+        
+        glb_path = context.scene.drone_glb_path
+        if glb_path and os.path.exists(bpy.path.abspath(glb_path)):
+            try:
+                print(f"[DEBUG Blender Addon] Loading GLB: {glb_path}")
+                bpy.ops.import_scene.gltf(filepath=bpy.path.abspath(glb_path))
+            except Exception as e:
+                self.report({'ERROR'}, f"Failed to load GLB: {e}")
+                print(f"[ERROR] Failed to load GLB: {e}")
+                
         ipc.start_telemetry_listener()
         self.report({'INFO'}, "Connecting to telemetry...")
         return {'FINISHED'}

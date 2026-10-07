@@ -50,6 +50,13 @@ def register():
         subtype='FILE_PATH'
     )
     
+    bpy.types.Scene.drone_glb_path = bpy.props.StringProperty(
+        name="GLB Path",
+        description="Path to a GLB file to load on connect",
+        default="",
+        subtype='FILE_PATH'
+    )
+    
     # This boolean prevents the UI from cluttering up files unrelated to drone sim
     bpy.types.Scene.drone_sim_enabled = bpy.props.BoolProperty(
         name="Drone Sim Enabled",
@@ -65,6 +72,7 @@ def unregister():
         bpy.utils.unregister_class(cls)
         
     del bpy.types.Scene.drone_export_path
+    del bpy.types.Scene.drone_glb_path
     del bpy.types.Scene.drone_sim_enabled
     
     ipc.stop_telemetry_listener()
