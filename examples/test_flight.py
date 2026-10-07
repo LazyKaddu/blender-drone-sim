@@ -2,7 +2,7 @@ import time
 import os
 import numpy as np
 from gymnasium import spaces
-from custom_drone_env.env import CustomDroneEnv
+from CDE.custom_drone_env.env import CustomDroneEnv
 
 class TestFlightEnv(CustomDroneEnv):
     """
