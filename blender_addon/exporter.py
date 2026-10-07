@@ -27,16 +27,21 @@ def export_scene_to_urdf(filepath):
     
     for obj in bpy.context.scene.objects:
         # We only export meshes, and we ignore the Drone itself!
-        if obj.type == 'MESH' and not obj.name.lower().startswith("drone"):
+        if obj.type == 'MESH' and "drone" not in obj.name.lower():
             
             link_name = f"link_{obj.name.replace('.', '_')}"
             link = ET.SubElement(robot, "link", name=link_name)
             
-            # Inertial (mass=0 makes it a static, immovable obstacle in PyBullet)
+            # Inertial
             inertial = ET.SubElement(link, "inertial")
-            ET.SubElement(inertial, "mass", value="0.0")
-            ET.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
-            ET.SubElement(inertial, "inertia", ixx="0", ixy="0", ixz="0", iyy="0", iyz="0", izz="0")
+            if "STATIC" in obj.name:
+                ET.SubElement(inertial, "mass", value="0.0")
+                ET.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
+                ET.SubElement(inertial, "inertia", ixx="0", ixy="0", ixz="0", iyy="0", iyz="0", izz="0")
+            else:
+                ET.SubElement(inertial, "mass", value="1.0")
+                ET.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
+                ET.SubElement(inertial, "inertia", ixx="1.0", ixy="0", ixz="0", iyy="1.0", iyz="0", izz="1.0")
             
             # Select only this object to export it
             bpy.ops.object.select_all(action='DESELECT')
@@ -73,20 +78,22 @@ def export_scene_to_urdf(filepath):
             ET.SubElement(geom, "mesh", filename=f"assets/{obj_filename}")
             
             # Collision Geometry
-            collision = ET.SubElement(link, "collision")
-            ET.SubElement(collision, "origin", xyz="0 0 0", rpy="0 0 0")
-            geom_coll = ET.SubElement(collision, "geometry")
-            ET.SubElement(geom_coll, "mesh", filename=f"assets/{obj_filename}")
+            if "<NC>" not in obj.name:
+                collision = ET.SubElement(link, "collision")
+                ET.SubElement(collision, "origin", xyz="0 0 0", rpy="0 0 0")
+                geom_coll = ET.SubElement(collision, "geometry")
+                ET.SubElement(geom_coll, "mesh", filename=f"assets/{obj_filename}")
             
-            # Finally, connect this obstacle to the 'world_base'
-            joint_name = f"joint_{obj.name.replace('.', '_')}"
-            joint = ET.SubElement(robot, "joint", name=joint_name, type="fixed")
-            ET.SubElement(joint, "parent", link="world_base")
-            ET.SubElement(joint, "child", link=link_name)
-            
-            # Since the OBJ exporter naturally bakes the world transforms into the mesh,
-            # we must place the joint exactly at the origin to prevent double-transforms.
-            ET.SubElement(joint, "origin", xyz="0 0 0", rpy="0 0 0")
+            # Finally, connect this obstacle to the 'world_base' if it's static
+            if "<STATIC>" in obj.name:
+                joint_name = f"joint_{obj.name.replace('.', '_')}"
+                joint = ET.SubElement(robot, "joint", name=joint_name, type="fixed")
+                ET.SubElement(joint, "parent", link="world_base")
+                ET.SubElement(joint, "child", link=link_name)
+                
+                # Since the OBJ exporter naturally bakes the world transforms into the mesh,
+                # we must place the joint exactly at the origin to prevent double-transforms.
+                ET.SubElement(joint, "origin", xyz="0 0 0", rpy="0 0 0")
             
     # Restore original selection state
     bpy.ops.object.select_all(action='DESELECT')
