@@ -29,6 +29,7 @@ class DRONE_PT_panel(bpy.types.Panel):
         
         # --- Telemetry Control ---
         layout.label(text="Telemetry Link:")
+        layout.prop(context.scene, "drone_glb_path")
         if ipc.is_connected():
             layout.operator("drone.disconnect_telemetry", text="Stop Telemetry", icon='CANCEL')
             layout.label(text="Status: LIVE", icon='PLAY')
