@@ -3,6 +3,15 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom
 import os
 
+def _is_part_of_drone(obj):
+    """Recursively checks if the object or any of its parents has 'drone' in its name."""
+    curr = obj
+    while curr:
+        if "drone" in curr.name.lower():
+            return True
+        curr = curr.parent
+    return False
+
 def export_scene_to_urdf(filepath):
     """
     Parses the current Blender scene, generates a valid URDF XML string 
@@ -26,8 +35,8 @@ def export_scene_to_urdf(filepath):
     selected_objects = bpy.context.selected_objects.copy()
     
     for obj in bpy.context.scene.objects:
-        # We only export meshes, and we ignore the Drone itself!
-        if obj.type == 'MESH' and "drone" not in obj.name.lower():
+        # We only export meshes, and we ignore the Drone and all its children!
+        if obj.type == 'MESH' and not _is_part_of_drone(obj):
             
             link_name = f"link_{obj.name.replace('.', '_')}"
             link = ET.SubElement(robot, "link", name=link_name)
@@ -43,8 +52,9 @@ def export_scene_to_urdf(filepath):
                 ET.SubElement(inertial, "origin", xyz="0 0 0", rpy="0 0 0")
                 ET.SubElement(inertial, "inertia", ixx="1.0", ixy="0", ixz="0", iyy="1.0", iyz="0", izz="1.0")
             
-            # Select only this object to export it
-            bpy.ops.object.select_all(action='DESELECT')
+            # Select only this object to export it (using context-safe method)
+            for o in bpy.context.view_layer.objects:
+                o.select_set(False)
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
             
@@ -95,8 +105,9 @@ def export_scene_to_urdf(filepath):
                 # we must place the joint exactly at the origin to prevent double-transforms.
                 ET.SubElement(joint, "origin", xyz="0 0 0", rpy="0 0 0")
             
-    # Restore original selection state
-    bpy.ops.object.select_all(action='DESELECT')
+    # Restore original selection state (using context-safe method)
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
     for obj in selected_objects:
         obj.select_set(True)
     if active_obj:

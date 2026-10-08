@@ -22,8 +22,8 @@ class TestFlightEnv(CustomDroneEnv):
         return {"0": self._getDroneStateVector(0)}
 
     def _preprocessAction(self, action):
-        # Just return zero RPMs for all 4 motors so it simply falls due to gravity (perfect for testing)
-        return np.zeros((1, 4), dtype=np.float32)
+        # Provide enough RPM to all 4 motors to make it fly upwards! (Hover is ~14468)
+        return np.array([[16000, 16000, 16000, 16000]], dtype=np.float32)
 
     def _computeReward(self):
         return 0.0
@@ -45,8 +45,12 @@ def run_test():
     print(f"Loading URDF from: {urdf_path}")
     print("========================================")
 
-    # Initialize environment
-    env = TestFlightEnv(urdf_path=urdf_path, enable_ipc=True)
+    # Initialize environment, spawning the drone 5 meters in the air
+    env = TestFlightEnv(
+        urdf_path=urdf_path, 
+        enable_ipc=True,
+        initial_xyzs=np.array([[0.0, 0.0, 5.0]])
+    )
     
     obs, info = env.reset()
     
