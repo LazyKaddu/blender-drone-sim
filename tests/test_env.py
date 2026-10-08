@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from gymnasium import spaces
-from custom_drone_env.env import CustomDroneEnv
+from CDE.custom_drone_env.env import CustomDroneEnv
 
 class DummyDroneEnv(CustomDroneEnv):
     """A concrete implementation of our abstract environment for testing."""

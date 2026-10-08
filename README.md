@@ -66,17 +66,15 @@ blender-drone-sim/
 - An environment with OpenGL / EGL rendering drivers (NVIDIA drivers recommended for visual observations)
 
 ### 1. Install the Simulation Environment
-Clone the repository and install it in editable mode:
+Install the published Python package directly using pip:
 ```bash
-git clone https://github.com/LazyKaddu/blender-drone-sim.git
-cd blender-drone-sim
-pip install -e .
+pip install kaddulive-blender-custom-drone-sim==0.1.1
 ```
 
 ### 2. Install the Blender Add-on
-1. Compress `blender_addon/drone_compiler.py` into a `.zip` archive (or point Blender directly to the script).
+1. Use the provided `blender-addon.zip` archive containing the Blender integration.
 2. In Blender, navigate to: `Edit -> Preferences -> Add-ons -> Install...`.
-3. Select the file, check the box to enable "Drone Sim: World Compiler & Telemetry".
+3. Select the `blender-addon.zip` file, and check the box to enable "Drone Sim Link".
 4. Press `N` in the 3D Viewport to find the Drone Sim sidebar tab.
 
 ## Quickstart
@@ -85,33 +83,61 @@ pip install -e .
 Run the baseline environment to initialize the PyBullet physics server and local IPC listeners:
 ```python
 import time
+import os
 import numpy as np
-import gymnasium as gym
-import custom_drone_env
+from gymnasium import spaces
+from CDE.custom_drone_env.env import CustomDroneEnv
 
-# Spin up environment with PyBullet GUI enabled
-env = gym.make("CustomDrone-v0", gui=True, obs="kin", act="pid")
+class TestFlightEnv(CustomDroneEnv):
+    def _actionSpace(self):
+        return spaces.Dict({"0": spaces.Box(low=-1, high=1, shape=(4,))})
+
+    def _observationSpace(self):
+        return spaces.Dict({"0": spaces.Box(low=-np.inf, high=np.inf, shape=(20,))})
+
+    def _computeObs(self):
+        # Return the actual drone state so Blender gets the real physics!
+        return {"0": self._getDroneStateVector(0)}
+
+    def _preprocessAction(self, action):
+        # Provide enough RPM to all 4 motors to make it fly upwards
+        return np.array([[16000, 16000, 16000, 16000]], dtype=np.float32)
+
+    def _computeReward(self): return 0.0
+    def _computeTerminated(self): return False
+    def _computeTruncated(self): return False
+    def _computeInfo(self): return {}
+
+# Path to the exported URDF from Blender
+urdf_path = os.path.abspath("path/to/your/scene.urdf")
+
+# Initialize environment, spawning the drone 5 meters in the air
+env = TestFlightEnv(
+    urdf_path=urdf_path, 
+    enable_ipc=True,
+    initial_xyzs=np.array([[0.0, 0.0, 5.0]])
+)
 obs, info = env.reset()
 
-print("PyBullet engine initialized. Waiting for actions or Blender hot-reloads...")
-
-while True:
-    # Example: Stationary hover command (Thrust, Roll, Pitch, Yaw)
-    action = {"0": np.array([0.0, 0.0, 0.0, 0.5])}
-    obs, reward, terminated, truncated, info = env.step(action)
-    
-    if terminated or truncated:
-        obs, info = env.reset()
-        
-    time.sleep(1 / 240)  # Physics sub-stepping rate
+print("[INFO] Environment is running. Waiting for Blender connections...")
+try:
+    while True:
+        action = env.action_space.sample() 
+        obs, reward, terminated, truncated, info = env.step(action)
+        time.sleep(1.0 / env.CTRL_FREQ)
+except KeyboardInterrupt:
+    print("Stopping test flight environment...")
+finally:
+    env.close()
 ```
 
 ### Step 2: Build and Compile in Blender
 1. Open a new or existing scene in Blender.
 2. Select any mesh object (e.g., walls, pillars, obstacles).
 3. Under the Drone Sim sidebar panel, tag the mesh with **Is Obstacle**.
-4. Click **Compile to PyBullet**.
-5. The URDF will be automatically written to disk, and the running PyBullet simulation will hot-reload the updated world layout instantly without crashing your script.
+4. Set the **URDF Path** in the UI to match where your script is looking.
+5. Click **Reload Environment**.
+6. Set the **GLB Path** and click **Start Telemetry** to view the live digital twin in Blender!
 
 ## High-Throughput Training with Vectorization
 To train a Diffusion Policy or RL agent without rendering bottlenecks, use Gymnasium's native asynchronous multiprocessing wrapper:
