@@ -1,13 +1,13 @@
 # custom_drone_env/env.py
 import os
 import pybullet as p
-from gym_pybullet_drones.envs.BaseAviary import BaseAviary
+from gym_pybullet_drones.envs.HoverAviary import HoverAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
 # Import our new helper
 from custom_drone_env.server import SimulationIPC 
 
-class CustomDroneEnv(BaseAviary):
+class CustomDroneEnv(HoverAviary):
     def __init__(self, urdf_path="C:/path/to/export/world.urdf", enable_ipc=True, **kwargs):
         print(f"[DEBUG CustomDroneEnv] __init__ called with urdf_path={urdf_path}, enable_ipc={enable_ipc}")
         self.urdf_path = urdf_path
