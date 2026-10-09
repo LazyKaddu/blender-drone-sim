@@ -1,7 +1,7 @@
 import time
 import pytest
 import urllib.request
-from custom_drone_env.server import SimulationIPC
+from CDE.custom_drone_env.server import SimulationIPC
 
 def test_http_hot_reload_callback():
     """Test that the HTTP server correctly receives /reload requests and triggers the callback."""
