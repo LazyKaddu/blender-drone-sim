@@ -15,7 +15,7 @@ class CustomDroneEnv(HoverAviary):
         self.enable_ipc = enable_ipc
         
         # 1. Start the Base PyBullet Physics
-        super().__init__(drone_model=DroneModel.CF2X, num_drones=1, physics=Physics.PYB, **kwargs)
+        super().__init__(drone_model=DroneModel.CF2X, physics=Physics.PYB, **kwargs)
 
         # 2. Boot up the background servers (HTTP & WebSockets)
         if self.enable_ipc:
@@ -55,7 +55,7 @@ class CustomDroneEnv(HoverAviary):
                 "r": float(kin[7]), "p": float(kin[8]), "y_rot": float(kin[9])
             }
             self.ipc.update_state(state)
-        print("State: ", state)
+            print("State: ", state)
         return obs, reward, terminated, truncated, info
 
     # Mandatory Gym/Aviary Overrides (To be implemented by specific tasks)
