@@ -68,7 +68,7 @@ blender-drone-sim/
 ### 1. Install the Simulation Environment
 Install the published Python package directly using pip:
 ```bash
-pip install kaddulive-blender-custom-drone-sim==0.1.1
+pip install kaddulive-blender-sim-env
 ```
 
 ### 2. Install the Blender Add-on
